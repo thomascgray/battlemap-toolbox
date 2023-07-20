@@ -66,6 +66,7 @@ function App() {
     };
 
     setTimeout(() => {
+      clearGrid();
       drawGrid(gridDrawingInfo);
     }, 100);
   };
