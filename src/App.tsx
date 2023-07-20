@@ -120,7 +120,7 @@ function App() {
     canvas3Context.clearRect(0, 0, canvas3.width, canvas3.height);
   };
 
-  const drawGridFromTotalSquareCount = (gridDrawingInfo: IGridDrawingInfo) => {
+  const drawGrid_Squares = (gridDrawingInfo: IGridDrawingInfo) => {
     const canvas = document.getElementById(
       "canvas-2-grid"
     ) as HTMLCanvasElement;
@@ -157,7 +157,7 @@ function App() {
   };
 
   // TODO get offset working for this
-  const drawHexagonGrid = (gridDrawingInfo: IGridDrawingInfo) => {
+  const drawGrid_Hexagon = (gridDrawingInfo: IGridDrawingInfo) => {
     const canvas = document.getElementById(
       "canvas-2-grid"
     ) as HTMLCanvasElement;
@@ -179,7 +179,6 @@ function App() {
 
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.beginPath();
-    // context.strokeStyle = gridDrawingInfo.colour;
     context.lineWidth = gridDrawingInfo.lineThickness;
     context.globalAlpha = gridDrawingInfo.opacity;
 
@@ -191,13 +190,14 @@ function App() {
       totalHexesToDrawDown,
       {
         strokeStyle: gridDrawingInfo.colour,
-        radius:
-          canvas.width /
-          (Math.sqrt(3) *
-            Math.sqrt((3 * gridDrawingInfo.totalUnitsAcross) / 2)) /
-          Math.sqrt(
-            gridDrawingInfo.totalUnitsAcross / (heightToWidthFactor * 1.4)
-          ),
+        // radius:
+        //   canvas.width /
+        //   (Math.sqrt(3) *
+        //     Math.sqrt((3 * gridDrawingInfo.totalUnitsAcross) / 2)) /
+        //   Math.sqrt(
+        //     gridDrawingInfo.totalUnitsAcross / (heightToWidthFactor * 1.4)
+        //   ),
+        radius: canvas.width / totalHexesToDrawAcross,
       }
     );
     context.closePath();
@@ -216,9 +216,9 @@ function App() {
 
   const drawGrid = (gridDrawingInfo: IGridDrawingInfo) => {
     if (gridDrawingInfo.gridType === EGridOverlayType.HEXAGONS) {
-      drawHexagonGrid(gridDrawingInfo);
+      drawGrid_Hexagon(gridDrawingInfo);
     } else if (gridDrawingInfo.gridType === EGridOverlayType.SQUARES) {
-      drawGridFromTotalSquareCount(gridDrawingInfo);
+      drawGrid_Squares(gridDrawingInfo);
     } else if (gridDrawingInfo.gridType === EGridOverlayType.NONE) {
       clearGrid();
     }
@@ -353,7 +353,7 @@ function App() {
               }}
               type="range"
               step="0.05"
-              min="0.2"
+              min="0.05"
               max="1"
             ></input>
           </label>
