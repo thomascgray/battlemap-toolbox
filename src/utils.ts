@@ -1,121 +1,106 @@
-// @ts-nocheck
-// taken completely from https://stackoverflow.com/questions/72661662/draw-grid-with-hexagons-using-canvas-html-javascript
-const TAU = 2 * Math.PI;
+function calculateWidthUsedHexagonFlatTop(
+  numHexagons: number,
+  hexagonWidth: number
+) {
+  if (numHexagons <= 0) {
+    return 0;
+  }
 
-const defaultGridOptions = {
-  radius: 40,
-  sides: 6,
-  inset: 0,
-  // Context
-  fillStyle: "",
-  strokeStyle: "white",
-  // Other
-  randomColors: null,
-};
+  // Distance between adjacent hexagon centers along the x-axis
+  const hexagonSpacing = (hexagonWidth * 3) / 4;
 
-export const drawGrid = (ctx, x, y, w, h, options = {}) => {
-  const opts = { ...defaultGridOptions, ...options };
-  const points = createPoly(opts);
-  opts.diameter = opts.radius * 2;
-  for (let gy = y; gy < y + h; gy++) {
-    for (let gx = x; gx < x + w; gx++) {
-      ctx.fillStyle = opts.randomColors
-        ? pickRandom(opts.randomColors)
-        : opts.fillStyle;
-      drawPoly(ctx, gridToPixel(gx, gy, opts), points, opts);
+  // Total width taking into account the overlap
+  const totalWidth = (numHexagons - 1) * hexagonSpacing + hexagonWidth;
+
+  return totalWidth;
+}
+
+export const drawGrid_FlatTop = (
+  context: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  gridWidth: number,
+  gridHeight: number
+) => {
+  const heightFactor = canvasHeight / canvasWidth;
+  let hexagonDiameter = canvasWidth / gridWidth;
+
+  // the diameter needs to take into account the fact that when the hexes are tiled,
+  // they're overlapping - and therefore it needs to be larger than calculated
+
+  const totalWidthUsedActuallyUsed = calculateWidthUsedHexagonFlatTop(
+    gridWidth,
+    hexagonDiameter
+  );
+
+  const widthNotAccountedFor = (canvasWidth - totalWidthUsedActuallyUsed) * 1.5;
+  const amountToAddToDiameter = widthNotAccountedFor / gridWidth;
+
+  hexagonDiameter += amountToAddToDiameter;
+  //   let hexagondiameter
+  //   we start from an earlier number so that it covers the whole canvas
+  for (let y = -1; y < Math.ceil(gridHeight * heightFactor) + 1; y++) {
+    for (let x = -1; x < gridWidth + 1; x++) {
+      let xTilingOffset = 0;
+      let yTilingOffset = 0;
+
+      // on even columns
+      if (x % 2 === 0) {
+        yTilingOffset = hexagonDiameter / 2;
+      }
+
+      xTilingOffset = x * (hexagonDiameter / 4) * -1 - hexagonDiameter / 2;
+
+      const xPos = x * hexagonDiameter + xTilingOffset;
+      const yPos = y * hexagonDiameter + yTilingOffset;
+
+      drawHexagonFlatTop(context, xPos, yPos, hexagonDiameter, hexagonDiameter);
     }
   }
 };
 
-const gridToPixel = (gridX, gridY, opts) => {
-  const m = gridMeasurements(opts);
-  return toPoint(
-    Math.floor(gridX * m.gridSpaceX),
-    Math.floor(gridY * m.gridSpaceY + (gridX % 2 ? m.gridOffsetY : 0))
-  );
+export const drawHexagonFlatTop = (
+  context: CanvasRenderingContext2D,
+  xPos: number,
+  yPos: number,
+  width: number,
+  height: number
+) => {
+  const hexagonWidth = width;
+  const hexagonHeight = height;
+  const hexagonWidthQuarter = hexagonWidth / 4;
+  context.beginPath();
+
+  /*1*/ context.moveTo(xPos, yPos + hexagonWidth / 2);
+  /*2*/ context.lineTo(xPos + hexagonWidthQuarter, yPos);
+  /*3*/ context.lineTo(xPos + hexagonWidthQuarter * 3, yPos);
+  /*4*/ context.lineTo(xPos + hexagonWidth, yPos + hexagonHeight / 2);
+  /*5*/ context.lineTo(xPos + hexagonWidthQuarter * 3, yPos + hexagonHeight);
+  /*6*/ context.lineTo(xPos + hexagonWidthQuarter, yPos + hexagonHeight);
+
+  context.closePath();
+  context.stroke();
 };
 
-const drawPoly = (ctx, origin, points, opts) => {
-  ctx.strokeStyle = opts.strokeStyle;
-  ctx.save();
-  ctx.translate(origin.x, origin.y);
-  polyPath3(ctx, points);
-  ctx.restore();
-  if (opts.fillStyle || opts.randomColors) ctx.fill();
-  if (opts.strokeStyle) ctx.stroke();
+export const drawHexagonPointyTop = (
+  context: CanvasRenderingContext2D,
+  xPos: number,
+  yPos: number,
+  width: number,
+  height: number
+) => {
+  const hexagonWidth = width;
+  const hexagonHeight = height;
+  const hexagonRadius = hexagonWidth / 2;
+
+  context.beginPath();
+  context.moveTo(xPos + hexagonRadius, yPos);
+  context.lineTo(xPos + hexagonWidth, yPos + hexagonHeight / 4);
+  context.lineTo(xPos + hexagonWidth, yPos + (hexagonHeight * 3) / 4);
+  context.lineTo(xPos + hexagonRadius, yPos + hexagonHeight);
+  context.lineTo(xPos, yPos + (hexagonHeight * 3) / 4);
+  context.lineTo(xPos, yPos + hexagonHeight / 4);
+  context.closePath();
+  context.stroke();
+  context.fill();
 };
-
-const createPoly = (opts, points = []) => {
-  const { inset, radius, sides } = opts,
-    size = radius - inset,
-    step = TAU / sides;
-  for (let i = 0; i < sides; i++) {
-    points.push(toPolarCoordinate(0, 0, size, step * i));
-  }
-  return points;
-};
-
-const gridMeasurements = (opts) => {
-  const { diameter, inset, radius, sides } = opts,
-    edgeLength = Math.sin(Math.PI / sides) * diameter,
-    gridSpaceX = diameter - edgeLength / 2,
-    gridSpaceY = Math.cos(Math.PI / sides) * diameter,
-    gridOffsetY = gridSpaceY / 2;
-  return {
-    diameter,
-    edgeLength,
-    gridSpaceX,
-    gridSpaceY,
-    gridOffsetY,
-  };
-};
-
-const polyPath2 = (ctx, points = []) => {
-  ctx.beginPath();
-  ctx.moveTo(points[0], points[1]);
-  for (let i = 2; i < points.length - 1; i += 2) {
-    ctx.lineTo(points[i], points[i + 1]);
-  }
-  ctx.closePath();
-};
-
-const polyPath3 = (ctx, points = []) => {
-  const [{ x: startX, y: startY }] = points;
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  points.forEach(({ x, y }) => {
-    ctx.lineTo(x, y);
-  });
-  ctx.closePath();
-};
-
-const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-const toPoint = (x, y) => ({ x, y });
-
-const fromPoint = ({ x, y }) => [x, y];
-
-const toPolarCoordinate = (centerX, centerY, radius, angle) => ({
-  x: centerX + radius * Math.cos(angle),
-  y: centerY + radius * Math.sin(angle),
-});
-
-const toPolarCoordinate2 = (centerX, centerY, radius, sides, i) =>
-  toPolarCoordinate(centerX, centerY, radius, i === 0 ? 0 : (i * TAU) / sides);
-
-const generateColors = (
-  count,
-  saturation = 1.0,
-  lightness = 0.5,
-  alpha = 1.0
-) =>
-  Array.from(
-    { length: count },
-    (_, i) =>
-      `hsla(${[
-        Math.floor((i / count) * 360),
-        `${Math.floor(saturation * 100)}%`,
-        `${Math.floor(lightness * 100)}%`,
-        alpha,
-      ].join(", ")})`
-  );

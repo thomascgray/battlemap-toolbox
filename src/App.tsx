@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { drawGrid as drawHexagonGridLibrary } from "./utils";
+import { drawGrid_FlatTop } from "./utils";
 import classnames from "classnames";
 
 export enum EGridOverlayType {
-  NONE = "NONE",
   SQUARES = "SQUARES",
   HEXAGONS = "HEXAGONS",
 }
@@ -22,7 +21,7 @@ function App() {
   const [gridDrawingInfo, setGridDrawingInfo] = useState<IGridDrawingInfo>({
     totalUnitsAcross: 10,
     opacity: 0.5,
-    gridType: EGridOverlayType.NONE,
+    gridType: EGridOverlayType.HEXAGONS,
     lineThickness: 2,
     xOffset: 0,
     yOffset: 0,
@@ -65,6 +64,10 @@ function App() {
       ) as HTMLDivElement;
       verticalSpacer.style.height = `${canvas.offsetHeight}px`;
     };
+
+    setTimeout(() => {
+      drawGrid(gridDrawingInfo);
+    }, 100);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,12 +114,19 @@ function App() {
     }
 
     canvas3Context.drawImage(canvas1, 0, 0);
+    canvas3Context.globalAlpha = gridDrawingInfo.opacity;
     canvas3Context.drawImage(canvas2, 0, 0);
-    canvas3.toBlob(function (blob) {
-      // @ts-ignore
-      const item = new ClipboardItem({ "image/png": blob });
-      navigator.clipboard.write([item]);
-    });
+    canvas3Context.globalAlpha = 1;
+    try {
+      canvas3.toBlob(function (blob) {
+        if (!blob) {
+          return;
+        }
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      });
+    } catch (e) {
+      console.log("e", e);
+    }
     canvas3Context.clearRect(0, 0, canvas3.width, canvas3.height);
   };
 
@@ -168,37 +178,15 @@ function App() {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.beginPath();
     context.lineWidth = gridDrawingInfo.lineThickness;
-    context.globalAlpha = gridDrawingInfo.opacity;
+    // context.globalAlpha = gridDrawingInfo.opacity;
+    context.strokeStyle = gridDrawingInfo.colour;
 
-    const heightToWidthFactor = canvas.width / canvas.height;
-
-    const totalHexesToDrawAcross = gridDrawingInfo.totalUnitsAcross;
-    const totalHexesToDrawDown = Math.floor(
-      gridDrawingInfo.totalUnitsAcross / heightToWidthFactor
-    );
-
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-    context.beginPath();
-    context.lineWidth = gridDrawingInfo.lineThickness;
-    context.globalAlpha = gridDrawingInfo.opacity;
-
-    drawHexagonGridLibrary(
+    drawGrid_FlatTop(
       context,
-      0,
-      0,
-      totalHexesToDrawAcross,
-      totalHexesToDrawDown,
-      {
-        strokeStyle: gridDrawingInfo.colour,
-        // radius:
-        //   canvas.width /
-        //   (Math.sqrt(3) *
-        //     Math.sqrt((3 * gridDrawingInfo.totalUnitsAcross) / 2)) /
-        //   Math.sqrt(
-        //     gridDrawingInfo.totalUnitsAcross / (heightToWidthFactor * 1.4)
-        //   ),
-        radius: canvas.width / totalHexesToDrawAcross,
-      }
+      canvas.width,
+      canvas.height,
+      gridDrawingInfo.totalUnitsAcross,
+      gridDrawingInfo.totalUnitsAcross
     );
     context.closePath();
   };
@@ -219,14 +207,12 @@ function App() {
       drawGrid_Hexagon(gridDrawingInfo);
     } else if (gridDrawingInfo.gridType === EGridOverlayType.SQUARES) {
       drawGrid_Squares(gridDrawingInfo);
-    } else if (gridDrawingInfo.gridType === EGridOverlayType.NONE) {
-      clearGrid();
     }
   };
 
   return (
     <>
-      <div className="container mx-auto space-y-4 mt-4">
+      <div className="container mx-auto space-y-4 mt-4 mb-4">
         <h1 className="text-3xl">Tombola's BattleMap Toolbox</h1>
 
         <span>Import a map</span>
@@ -262,6 +248,9 @@ function App() {
               id="canvas-1-image"
             ></canvas>
             <canvas
+              style={{
+                opacity: gridDrawingInfo.opacity,
+              }}
               width="1"
               height="1"
               className="w-full absolute top-0 left-0"
@@ -291,7 +280,6 @@ function App() {
                 });
               }}
             >
-              <option value={EGridOverlayType.NONE}>None</option>
               <option value={EGridOverlayType.HEXAGONS}>Hexagons</option>
               <option value={EGridOverlayType.SQUARES}>Squares</option>
             </select>
