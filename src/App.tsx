@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { drawGrid as drawHexagonGridLibrary } from "./utils";
+import classnames from "classnames";
 
 export enum EGridOverlayType {
   NONE = "NONE",
@@ -17,6 +18,7 @@ export interface IGridDrawingInfo {
 }
 
 function App() {
+  const [isImageImported, setIsImageImported] = useState(false);
   const [gridDrawingInfo, setGridDrawingInfo] = useState<IGridDrawingInfo>({
     totalUnitsAcross: 10,
     opacity: 0.5,
@@ -37,6 +39,8 @@ function App() {
     if (!context) {
       return;
     }
+
+    setIsImageImported(true);
 
     const img = new Image();
     img.src = URL.createObjectURL(image);
@@ -173,6 +177,12 @@ function App() {
       gridDrawingInfo.totalUnitsAcross / heightToWidthFactor
     );
 
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    context.beginPath();
+    // context.strokeStyle = gridDrawingInfo.colour;
+    context.lineWidth = gridDrawingInfo.lineThickness;
+    context.globalAlpha = gridDrawingInfo.opacity;
+
     drawHexagonGridLibrary(
       context,
       0,
@@ -180,6 +190,7 @@ function App() {
       totalHexesToDrawAcross,
       totalHexesToDrawDown,
       {
+        strokeStyle: gridDrawingInfo.colour,
         radius:
           canvas.width /
           (Math.sqrt(3) *
@@ -238,7 +249,12 @@ function App() {
 
         <>
           {/* the canvas layers */}
-          <div id="canvas-layers" className="canvas-layers relative">
+          <div
+            id="canvas-layers"
+            className={classnames("canvas-layers relative", {
+              hidden: !isImageImported,
+            })}
+          >
             <canvas
               width="1"
               height="1"
