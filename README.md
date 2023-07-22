@@ -12,6 +12,7 @@ Go play with it here! -> https://tombolas-battlemap-toolbox.netlify.app/
 - Add a grid of squares, hexes (pointy top), or hexes (flat top)
 - Adjust grid size, line thickness, opacity, and colour
 - Save the final image back out to your computer clipboard
+- All work is done directly in your browser, **nothing** is uploaded anywhere.
 
 More features to come as and when I need them!
 
