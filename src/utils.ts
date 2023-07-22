@@ -85,9 +85,7 @@ export const drawGrid_PointyTop = (
   gridHeight: number
 ) => {
   let hexagonDiameter = canvasWidth / gridWidth;
-  const heightFactor = canvasWidth / canvasHeight;
 
-  // calculateHeightUsedHexagonPointyTop
   const totalHeightUsedActuallyUsed = calculateHeightUsedHexagonPointyTop(
     gridWidth,
     hexagonDiameter

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { drawGrid_FlatTop, drawGrid_PointyTop } from "./utils";
 import classnames from "classnames";
+import * as Icons from "./icons";
 
 export enum EGridOverlayType {
   SQUARES = "SQUARES",
@@ -101,6 +102,7 @@ function App() {
   };
 
   const onCopyImageToClipboard = () => {
+    setisExportingImage(true);
     // combine all the canvases together into 1 image
     const canvas1 = document.getElementById(
       "canvas-1-image"
@@ -127,9 +129,11 @@ function App() {
           return;
         }
         navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setisExportingImage(false);
       });
     } catch (e) {
       console.log("e", e);
+      setisExportingImage(false);
     }
     canvas3Context.clearRect(0, 0, canvas3.width, canvas3.height);
   };
@@ -242,7 +246,7 @@ function App() {
             accept="image/png, image/jpeg"
             onChange={onFileChange}
           />
-
+          or
           <button
             onClick={onReadImageFromClipboard}
             className="bg-red-600 rounded px-2 py-1 text-white hover:scale-110 hover:bg-red-500 active:scale-90 active:bg-red-700"
@@ -403,9 +407,24 @@ function App() {
 
           <button
             onClick={onCopyImageToClipboard}
-            className="bg-red-600 rounded px-2 py-1 text-white text-2xl"
+            disabled={!isImageImported || isExportingImage}
+            className={classnames(
+              "bg-red-600 rounded px-2 py-2 text-white text-2xl flex items-center",
+              {
+                "opacity-50 cursor-not-allowed": !isImageImported,
+              }
+            )}
           >
-            Export final image to clipboard
+            <span
+              className={classnames("mr-2", {
+                "animate-spin": isExportingImage,
+              })}
+            >
+              {isExportingImage ? <Icons.Update /> : <Icons.CopyToClipboard />}
+            </span>
+            {isExportingImage
+              ? "Exporting..."
+              : "Export final image to clipboard"}
           </button>
         </>
       </div>
