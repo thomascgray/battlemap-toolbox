@@ -96,9 +96,8 @@ export const drawGrid_PointyTop = (
 
   // how many extra hexagons will it take to use up that extra height
 
-  const extraHexagonsNeeded = Math.ceil(
-    heightNotAccountedFor / hexagonDiameter
-  );
+  const extraHexagonsNeeded =
+    Math.ceil(heightNotAccountedFor / hexagonDiameter) / 1.5;
 
   for (let y = -1; y < gridHeight + extraHexagonsNeeded; y++) {
     for (let x = -1; x < gridWidth + 1; x++) {
