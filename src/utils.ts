@@ -15,6 +15,23 @@ function calculateWidthUsedHexagonFlatTop(
   return totalWidth;
 }
 
+function calculateHeightUsedHexagonPointyTop(
+  numHexagons: number,
+  hexagonWidth: number
+) {
+  if (numHexagons <= 0) {
+    return 0;
+  }
+
+  // Distance between adjacent hexagon centers along the x-axis
+  const hexagonSpacing = (hexagonWidth * 3) / 4;
+
+  // Total width taking into account the overlap
+  const totalHeight = (numHexagons - 1) * hexagonSpacing + hexagonWidth;
+
+  return totalHeight;
+}
+
 export const drawGrid_FlatTop = (
   context: CanvasRenderingContext2D,
   canvasWidth: number,
@@ -44,17 +61,70 @@ export const drawGrid_FlatTop = (
       let xTilingOffset = 0;
       let yTilingOffset = 0;
 
-      // on even columns
+      // we need to fuck around with even columns due to Hex Magic
       if (x % 2 === 0) {
         yTilingOffset = hexagonDiameter / 2;
       }
 
+      // hate this
       xTilingOffset = x * (hexagonDiameter / 4) * -1 - hexagonDiameter / 2;
 
       const xPos = x * hexagonDiameter + xTilingOffset;
       const yPos = y * hexagonDiameter + yTilingOffset;
 
       drawHexagonFlatTop(context, xPos, yPos, hexagonDiameter, hexagonDiameter);
+    }
+  }
+};
+
+export const drawGrid_PointyTop = (
+  context: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  gridWidth: number,
+  gridHeight: number
+) => {
+  let hexagonDiameter = canvasWidth / gridWidth;
+  const heightFactor = canvasWidth / canvasHeight;
+
+  // calculateHeightUsedHexagonPointyTop
+  const totalHeightUsedActuallyUsed = calculateHeightUsedHexagonPointyTop(
+    gridWidth,
+    hexagonDiameter
+  );
+
+  const heightNotAccountedFor =
+    (canvasHeight - totalHeightUsedActuallyUsed) * 1.5;
+
+  // how many extra hexagons will it take to use up that extra height
+
+  const extraHexagonsNeeded = Math.ceil(
+    heightNotAccountedFor / hexagonDiameter
+  );
+
+  for (let y = -1; y < gridHeight + extraHexagonsNeeded; y++) {
+    for (let x = -1; x < gridWidth + 1; x++) {
+      let xTilingOffset = 0;
+      let yTilingOffset = 0;
+
+      // // we need to fuck around with even columns due to Hex Magic
+      if (y % 2 === 0) {
+        xTilingOffset = hexagonDiameter / 2;
+      }
+
+      // // hate this
+      yTilingOffset = y * (hexagonDiameter / 4) * -1 - hexagonDiameter / 2;
+
+      const xPos = x * hexagonDiameter + xTilingOffset;
+      const yPos = y * hexagonDiameter + yTilingOffset;
+
+      drawHexagonPointyTop(
+        context,
+        xPos,
+        yPos,
+        hexagonDiameter,
+        hexagonDiameter
+      );
     }
   }
 };
@@ -91,16 +161,16 @@ export const drawHexagonPointyTop = (
 ) => {
   const hexagonWidth = width;
   const hexagonHeight = height;
-  const hexagonRadius = hexagonWidth / 2;
+  // const hexagonRadius = hexagonWidth / 2;
+  const hexagonWidthQuarter = hexagonWidth / 4;
 
   context.beginPath();
-  context.moveTo(xPos + hexagonRadius, yPos);
-  context.lineTo(xPos + hexagonWidth, yPos + hexagonHeight / 4);
-  context.lineTo(xPos + hexagonWidth, yPos + (hexagonHeight * 3) / 4);
-  context.lineTo(xPos + hexagonRadius, yPos + hexagonHeight);
-  context.lineTo(xPos, yPos + (hexagonHeight * 3) / 4);
-  context.lineTo(xPos, yPos + hexagonHeight / 4);
+  context.moveTo(xPos, yPos + hexagonWidthQuarter * 1); // 1
+  context.lineTo(xPos + hexagonWidthQuarter * 2, yPos); // 2
+  context.lineTo(xPos + hexagonWidth, yPos + hexagonWidthQuarter * 1); // 3
+  context.lineTo(xPos + hexagonWidth, yPos + hexagonWidthQuarter * 3); // 4
+  context.lineTo(xPos + hexagonWidthQuarter * 2, yPos + hexagonHeight); // 5
+  context.lineTo(xPos, yPos + hexagonWidthQuarter * 3); // 6
   context.closePath();
   context.stroke();
-  context.fill();
 };

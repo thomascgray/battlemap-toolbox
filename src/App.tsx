@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { drawGrid_FlatTop } from "./utils";
+import { drawGrid_FlatTop, drawGrid_PointyTop } from "./utils";
 import classnames from "classnames";
 
 export enum EGridOverlayType {
   SQUARES = "SQUARES",
-  HEXAGONS = "HEXAGONS",
+  HEXAGONS_FLAT_TOP = "HEXAGONS_FLAT_TOP",
+  HEXAGONS_POINTY_TOP = "HEXAGONS_POINTY_TOP",
 }
 export interface IGridDrawingInfo {
   totalUnitsAcross: number;
@@ -18,10 +19,11 @@ export interface IGridDrawingInfo {
 
 function App() {
   const [isImageImported, setIsImageImported] = useState(false);
+  const [isExportingImage, setisExportingImage] = useState(false);
   const [gridDrawingInfo, setGridDrawingInfo] = useState<IGridDrawingInfo>({
     totalUnitsAcross: 10,
     opacity: 0.5,
-    gridType: EGridOverlayType.HEXAGONS,
+    gridType: EGridOverlayType.HEXAGONS_POINTY_TOP,
     lineThickness: 2,
     xOffset: 0,
     yOffset: 0,
@@ -38,8 +40,6 @@ function App() {
     if (!context) {
       return;
     }
-
-    setIsImageImported(true);
 
     const img = new Image();
     img.src = URL.createObjectURL(image);
@@ -59,16 +59,19 @@ function App() {
       ) as HTMLCanvasElement;
       canvas3.width = img.width;
       canvas3.height = img.height;
-      const verticalSpacer = document.getElementById(
-        "canvas-layers"
-      ) as HTMLDivElement;
-      verticalSpacer.style.height = `${canvas.offsetHeight}px`;
     };
 
     setTimeout(() => {
       clearGrid();
       drawGrid(gridDrawingInfo);
+      setIsImageImported(true);
     }, 100);
+    setTimeout(() => {
+      const verticalSpacer = document.getElementById(
+        "canvas-layers"
+      ) as HTMLDivElement;
+      verticalSpacer.style.height = `${canvas.offsetHeight}px`;
+    }, 200);
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +170,6 @@ function App() {
     context.stroke();
   };
 
-  // TODO get offset working for this
   const drawGrid_Hexagon = (gridDrawingInfo: IGridDrawingInfo) => {
     const canvas = document.getElementById(
       "canvas-2-grid"
@@ -179,16 +181,27 @@ function App() {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.beginPath();
     context.lineWidth = gridDrawingInfo.lineThickness;
-    // context.globalAlpha = gridDrawingInfo.opacity;
     context.strokeStyle = gridDrawingInfo.colour;
 
-    drawGrid_FlatTop(
-      context,
-      canvas.width,
-      canvas.height,
-      gridDrawingInfo.totalUnitsAcross,
-      gridDrawingInfo.totalUnitsAcross
-    );
+    if (gridDrawingInfo.gridType === EGridOverlayType.HEXAGONS_FLAT_TOP) {
+      drawGrid_FlatTop(
+        context,
+        canvas.width,
+        canvas.height,
+        gridDrawingInfo.totalUnitsAcross,
+        gridDrawingInfo.totalUnitsAcross
+      );
+    } else if (
+      gridDrawingInfo.gridType === EGridOverlayType.HEXAGONS_POINTY_TOP
+    ) {
+      drawGrid_PointyTop(
+        context,
+        canvas.width,
+        canvas.height,
+        gridDrawingInfo.totalUnitsAcross,
+        gridDrawingInfo.totalUnitsAcross
+      );
+    }
     context.closePath();
   };
 
@@ -204,10 +217,14 @@ function App() {
   };
 
   const drawGrid = (gridDrawingInfo: IGridDrawingInfo) => {
-    if (gridDrawingInfo.gridType === EGridOverlayType.HEXAGONS) {
+    if (gridDrawingInfo.gridType === EGridOverlayType.HEXAGONS_FLAT_TOP) {
       drawGrid_Hexagon(gridDrawingInfo);
     } else if (gridDrawingInfo.gridType === EGridOverlayType.SQUARES) {
       drawGrid_Squares(gridDrawingInfo);
+    } else if (
+      gridDrawingInfo.gridType === EGridOverlayType.HEXAGONS_POINTY_TOP
+    ) {
+      drawGrid_Hexagon(gridDrawingInfo);
     }
   };
 
@@ -281,13 +298,32 @@ function App() {
                 });
               }}
             >
-              <option value={EGridOverlayType.HEXAGONS}>Hexagons</option>
               <option value={EGridOverlayType.SQUARES}>Squares</option>
+              <option value={EGridOverlayType.HEXAGONS_POINTY_TOP}>
+                Hexagons (Pointy Top)
+              </option>
+              <option value={EGridOverlayType.HEXAGONS_FLAT_TOP}>
+                Hexagons (Flat Top)
+              </option>
             </select>
           </label>
 
           <label className="flex flex-col space-y-2">
-            <span>Total units across (Roughly, Ish)</span>
+            <span>
+              Total{" "}
+              {gridDrawingInfo.gridType === EGridOverlayType.SQUARES
+                ? "squares"
+                : "hexes"}{" "}
+              horizontally (Roughly, Ish)
+            </span>
+            <span className="text-xs italic text-slate-500">
+              We add some extra columns and rows to make sure the map is fully
+              covered, plus line thickness might affect exactly how many{" "}
+              {gridDrawingInfo.gridType === EGridOverlayType.SQUARES
+                ? "squares"
+                : "hexes"}{" "}
+              get drawn
+            </span>
             <input
               className="border-2 border-gray-400 rounded px-2 py-1"
               value={gridDrawingInfo.totalUnitsAcross}
@@ -346,50 +382,6 @@ function App() {
               max="1"
             ></input>
           </label>
-
-          <div className="flex w-full space-x-4">
-            <label className="flex flex-col space-y-2 w-1/2">
-              <span>X Offset: {gridDrawingInfo.xOffset}</span>
-              <input
-                value={gridDrawingInfo.xOffset}
-                onChange={(e) => {
-                  setGridDrawingInfo({
-                    ...gridDrawingInfo,
-                    xOffset: parseFloat(e.target.value),
-                  });
-                  drawGrid({
-                    ...gridDrawingInfo,
-                    xOffset: parseFloat(e.target.value),
-                  });
-                }}
-                type="range"
-                step="1"
-                min="-100"
-                max="100"
-              ></input>
-            </label>
-
-            <label className="flex flex-col space-y-2 w-1/2">
-              <span>Y Offset: {gridDrawingInfo.yOffset}</span>
-              <input
-                value={gridDrawingInfo.yOffset}
-                onChange={(e) => {
-                  setGridDrawingInfo({
-                    ...gridDrawingInfo,
-                    yOffset: parseFloat(e.target.value),
-                  });
-                  drawGrid({
-                    ...gridDrawingInfo,
-                    yOffset: parseFloat(e.target.value),
-                  });
-                }}
-                type="range"
-                step="1"
-                min="-100"
-                max="100"
-              ></input>
-            </label>
-          </div>
 
           <label className="flex flex-col space-y-2">
             <span>Grid colour: {gridDrawingInfo.colour}</span>
