@@ -1,3 +1,5 @@
+import { IGridDrawingInfo } from "./types";
+
 function calculateWidthUsedHexagonFlatTop(
   numHexagons: number,
   hexagonWidth: number
@@ -13,23 +15,6 @@ function calculateWidthUsedHexagonFlatTop(
   const totalWidth = (numHexagons - 1) * hexagonSpacing + hexagonWidth;
 
   return totalWidth;
-}
-
-function calculateHeightUsedHexagonPointyTop(
-  numHexagons: number,
-  hexagonWidth: number
-) {
-  if (numHexagons <= 0) {
-    return 0;
-  }
-
-  // Distance between adjacent hexagon centers along the x-axis
-  const hexagonSpacing = (hexagonWidth * 3) / 4;
-
-  // Total width taking into account the overlap
-  const totalHeight = (numHexagons - 1) * hexagonSpacing + hexagonWidth;
-
-  return totalHeight;
 }
 
 export const drawGrid_FlatTop = (
@@ -86,20 +71,9 @@ export const drawGrid_PointyTop = (
 ) => {
   let hexagonDiameter = canvasWidth / gridWidth;
 
-  const totalHeightUsedActuallyUsed = calculateHeightUsedHexagonPointyTop(
-    gridWidth,
-    hexagonDiameter
-  );
+  const heightFactor = (canvasWidth / canvasHeight) * gridWidth;
 
-  const heightNotAccountedFor =
-    (canvasHeight - totalHeightUsedActuallyUsed) * 1.5;
-
-  // how many extra hexagons will it take to use up that extra height
-
-  const extraHexagonsNeeded =
-    Math.ceil(heightNotAccountedFor / hexagonDiameter) / 1.5;
-
-  for (let y = -1; y < gridHeight + extraHexagonsNeeded; y++) {
+  for (let y = -1; y < gridHeight * heightFactor; y++) {
     for (let x = -1; x < gridWidth + 1; x++) {
       let xTilingOffset = 0;
       let yTilingOffset = 0;
@@ -170,4 +144,13 @@ export const drawHexagonPointyTop = (
   context.lineTo(xPos, yPos + hexagonWidthQuarter * 3); // 6
   context.closePath();
   context.stroke();
+};
+
+export const calculateFinalSquareSize = (
+  canvasWidth: number,
+  gridDrawingInfo: IGridDrawingInfo
+) => {
+  const squareSize = Math.floor(canvasWidth / gridDrawingInfo.totalUnitsAcross);
+
+  return squareSize;
 };

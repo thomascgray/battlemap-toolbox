@@ -1,22 +1,14 @@
 import { useState } from "react";
-import { drawGrid_FlatTop, drawGrid_PointyTop } from "./utils";
+import {
+  calculateFinalSquareSize,
+  drawGrid_FlatTop,
+  drawGrid_PointyTop,
+} from "./utils";
 import classnames from "classnames";
 import * as Icons from "./icons";
-
-export enum EGridOverlayType {
-  SQUARES = "SQUARES",
-  HEXAGONS_FLAT_TOP = "HEXAGONS_FLAT_TOP",
-  HEXAGONS_POINTY_TOP = "HEXAGONS_POINTY_TOP",
-}
-export interface IGridDrawingInfo {
-  totalUnitsAcross: number;
-  gridType: EGridOverlayType;
-  opacity: number;
-  lineThickness: number;
-  xOffset: number;
-  yOffset: number;
-  colour: string;
-}
+import { EGridOverlayType, IGridDrawingInfo } from "./types";
+import { Canvases } from "./Canvases";
+import { GridControls } from "./GridControls";
 
 function App() {
   const [isImageImported, setIsImageImported] = useState(false);
@@ -24,7 +16,7 @@ function App() {
   const [gridDrawingInfo, setGridDrawingInfo] = useState<IGridDrawingInfo>({
     totalUnitsAcross: 10,
     opacity: 0.5,
-    gridType: EGridOverlayType.HEXAGONS_POINTY_TOP,
+    gridType: EGridOverlayType.SQUARES,
     lineThickness: 2,
     xOffset: 0,
     yOffset: 0,
@@ -65,6 +57,7 @@ function App() {
     setTimeout(() => {
       clearGrid();
       drawGrid(gridDrawingInfo);
+      drawTemplates(gridDrawingInfo);
       setIsImageImported(true);
     }, 100);
     setTimeout(() => {
@@ -149,21 +142,19 @@ function App() {
     // clear the canvas
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.beginPath();
-    const gridSize = Math.floor(
-      context.canvas.width / gridDrawingInfo.totalUnitsAcross
-    );
+    const squareSize = calculateFinalSquareSize(canvas.width, gridDrawingInfo);
     // work out how many squares we need to draw
-    const numberOfSquaresX = Math.ceil(canvas.width / gridSize);
-    const numberOfSquaresY = Math.ceil(canvas.height / gridSize);
+    const numberOfSquaresX = Math.ceil(canvas.width / squareSize);
+    const numberOfSquaresY = Math.ceil(canvas.height / squareSize);
 
     // now draw the squares
     for (let x = 0; x < numberOfSquaresX; x++) {
       for (let y = 0; y < numberOfSquaresY; y++) {
         context.rect(
-          x * gridSize + gridDrawingInfo.xOffset,
-          y * gridSize + gridDrawingInfo.yOffset,
-          gridSize,
-          gridSize
+          x * squareSize + gridDrawingInfo.xOffset,
+          y * squareSize + gridDrawingInfo.yOffset,
+          squareSize,
+          squareSize
         );
       }
     }
@@ -232,13 +223,46 @@ function App() {
     }
   };
 
+  const drawTemplates = (gridDrawingInfo: IGridDrawingInfo) => {
+    const mainCanvas = document.getElementById(
+      "canvas-1-image"
+    ) as HTMLCanvasElement;
+    const canvas = document.getElementById(
+      "canvas-template-1-single-unit"
+    ) as HTMLCanvasElement;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return;
+    }
+    // clear the canvas
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    context.beginPath();
+
+    if (gridDrawingInfo.gridType === EGridOverlayType.SQUARES) {
+      // draw a single square at the correct size
+      const squareSize = calculateFinalSquareSize(
+        mainCanvas.width,
+        gridDrawingInfo
+      );
+      console.log("squareSize", squareSize);
+      canvas.width = squareSize;
+      canvas.height = squareSize;
+      context.fillStyle = "#FF0000";
+      context.globalAlpha = 0.4;
+      context.fillRect(0, 0, squareSize, squareSize);
+      context.closePath();
+    }
+
+    // get the final hexagon size
+  };
+
   return (
     <>
       <div className="container mx-auto space-y-4 mt-4 mb-4">
         <h1 className="text-3xl">Tombola's BattleMap Toolbox</h1>
 
         <span>Import a map</span>
-        <div className="flex space-x-2 items-center">
+        <div className="import-controls flex space-x-2 items-center">
           <input
             type="file"
             id="avatar"
@@ -255,156 +279,30 @@ function App() {
           </button>
         </div>
 
-        <>
+        <div className="canvases-wrapper flex space-x-2">
           {/* the canvas layers */}
-          <div
-            id="canvas-layers"
-            className={classnames("canvas-layers relative", {
-              hidden: !isImageImported,
-            })}
-          >
-            <canvas
-              width="1"
-              height="1"
-              className="w-full absolute top-0 left-0"
-              id="canvas-1-image"
-            ></canvas>
-            <canvas
-              style={{
-                opacity: gridDrawingInfo.opacity,
-              }}
-              width="1"
-              height="1"
-              className="w-full absolute top-0 left-0"
-              id="canvas-2-grid"
-            ></canvas>
-            <canvas
-              width="1"
-              height="1"
-              className="w-full absolute top-0 left-0"
-              id="canvas-3-final-output"
-            ></canvas>
+          <div className="w-3/5">
+            <Canvases
+              key="canvases"
+              gridDrawingInfo={gridDrawingInfo}
+              isImageImported={isImageImported}
+            />
           </div>
-
-          <label className="flex flex-col">
-            <span>Overlay Grid Type</span>
-            <select
-              className="border-2 border-gray-400 rounded px-2 py-1"
-              value={gridDrawingInfo.gridType}
-              onChange={(e) => {
-                setGridDrawingInfo({
-                  ...gridDrawingInfo,
-                  gridType: e.target.value as EGridOverlayType,
-                });
-                drawGrid({
-                  ...gridDrawingInfo,
-                  gridType: e.target.value as EGridOverlayType,
-                });
-              }}
-            >
-              <option value={EGridOverlayType.SQUARES}>Squares</option>
-              <option value={EGridOverlayType.HEXAGONS_POINTY_TOP}>
-                Hexagons (Pointy Top)
-              </option>
-              <option value={EGridOverlayType.HEXAGONS_FLAT_TOP}>
-                Hexagons (Flat Top)
-              </option>
-            </select>
-          </label>
-
-          <label className="flex flex-col space-y-2">
-            <span>
-              Total{" "}
-              {gridDrawingInfo.gridType === EGridOverlayType.SQUARES
-                ? "squares"
-                : "hexes"}{" "}
-              horizontally (Roughly, Ish)
-            </span>
-            <span className="text-xs italic text-slate-500">
-              We add some extra columns and rows to make sure the map is fully
-              covered, plus line thickness might affect exactly how many{" "}
-              {gridDrawingInfo.gridType === EGridOverlayType.SQUARES
-                ? "squares"
-                : "hexes"}{" "}
-              get drawn
-            </span>
-            <input
-              className="border-2 border-gray-400 rounded px-2 py-1"
-              value={gridDrawingInfo.totalUnitsAcross}
-              onChange={(e) => {
-                setGridDrawingInfo({
-                  ...gridDrawingInfo,
-                  totalUnitsAcross: parseInt(e.target.value),
-                });
-                drawGrid({
-                  ...gridDrawingInfo,
-                  totalUnitsAcross: parseInt(e.target.value),
-                });
-              }}
-              type="number"
+          <div className="w-2/5">
+            <GridControls
+              drawGrid={drawGrid}
+              drawTemplates={drawTemplates}
+              gridDrawingInfo={gridDrawingInfo}
+              setGridDrawingInfo={setGridDrawingInfo}
             />
-          </label>
+          </div>
+        </div>
 
-          <label className="flex flex-col space-y-2">
-            <span>Line thickness: {gridDrawingInfo.lineThickness}</span>
-            <input
-              value={gridDrawingInfo.lineThickness}
-              onChange={(e) => {
-                setGridDrawingInfo({
-                  ...gridDrawingInfo,
-                  lineThickness: parseInt(e.target.value),
-                });
-                drawGrid({
-                  ...gridDrawingInfo,
-                  lineThickness: parseInt(e.target.value),
-                });
-              }}
-              type="range"
-              step="1"
-              min="1"
-              max="10"
-            ></input>
-          </label>
-
-          <label className="flex flex-col space-y-2">
-            <span>Grid overlay opacity: {gridDrawingInfo.opacity}</span>
-            <input
-              value={gridDrawingInfo.opacity}
-              onChange={(e) => {
-                setGridDrawingInfo({
-                  ...gridDrawingInfo,
-                  opacity: parseFloat(e.target.value),
-                });
-                drawGrid({
-                  ...gridDrawingInfo,
-                  opacity: parseFloat(e.target.value),
-                });
-              }}
-              type="range"
-              step="0.05"
-              min="0.05"
-              max="1"
-            ></input>
-          </label>
-
-          <label className="flex flex-col space-y-2">
-            <span>Grid colour: {gridDrawingInfo.colour}</span>
-            <input
-              type="color"
-              value={gridDrawingInfo.colour}
-              onChange={(e) => {
-                setGridDrawingInfo({
-                  ...gridDrawingInfo,
-                  colour: e.target.value,
-                });
-                drawGrid({
-                  ...gridDrawingInfo,
-                  colour: e.target.value,
-                });
-              }}
-            />
-          </label>
-
+        <div className="export-button">
+          <span className="text-sm text-slate-500 italic">
+            Remember: the image is exported at the ORIGINAL resolution that it
+            was imported, not the preview size above.
+          </span>
           <button
             onClick={onCopyImageToClipboard}
             disabled={!isImageImported || isExportingImage}
@@ -426,7 +324,32 @@ function App() {
               ? "Exporting..."
               : "Export final image to clipboard"}
           </button>
-        </>
+        </div>
+
+        <h2>Templates</h2>
+        <canvas id="canvas-template-1-single-unit" className=""></canvas>
+        <button
+          onClick={() => {
+            const canvas = document.getElementById(
+              "canvas-template-1-single-unit"
+            ) as HTMLCanvasElement;
+            const context = canvas.getContext("2d");
+            if (!context) {
+              return;
+            }
+            canvas.toBlob(function (blob) {
+              if (!blob) {
+                return;
+              }
+              navigator.clipboard.write([
+                new ClipboardItem({ "image/png": blob }),
+              ]);
+              setisExportingImage(false);
+            });
+          }}
+        >
+          export template
+        </button>
       </div>
     </>
   );
