@@ -237,9 +237,9 @@ function App() {
         <section className="space-y-2">
           <h2>Templates</h2>
           <p className="text-sm text-slate-500 italic">
-            Useful mid-opacity templates for marking out areas of effect, etc.
-            They are all automatically scale to the grid above - the previews
-            might differ in size.
+            Useful semi-opaque templates for marking out areas of effect, etc.
+            When you copy to clipboard, they'll be the right scaled size - the
+            previews are not to scale.
           </p>
           <div className="flex space-x-4">
             {gridDrawingInfo.gridType === EGridOverlayType.SQUARES && (
@@ -248,6 +248,15 @@ function App() {
                 <Templates.Square1x3 gridDrawingInfo={gridDrawingInfo} />
                 <Templates.Square2x2 gridDrawingInfo={gridDrawingInfo} />
                 <Templates.Square3x3 gridDrawingInfo={gridDrawingInfo} />
+              </>
+            )}
+            {gridDrawingInfo.gridType ===
+              EGridOverlayType.HEXAGONS_POINTY_TOP && (
+              <>
+                <Templates.HexPointyTop1x1 gridDrawingInfo={gridDrawingInfo} />
+                <Templates.HexPointyTop1Slash2
+                  gridDrawingInfo={gridDrawingInfo}
+                />
               </>
             )}
           </div>

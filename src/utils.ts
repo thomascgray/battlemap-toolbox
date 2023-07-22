@@ -154,3 +154,12 @@ export const calculateFinalSquareSize = (
 
   return squareSize;
 };
+
+export const calculateFinalHexPointyTopSize = (
+  canvasWidth: number,
+  gridWidth: number
+) => {
+  let hexagonDiameter = canvasWidth / gridWidth;
+
+  return hexagonDiameter;
+};
