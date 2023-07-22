@@ -3,13 +3,9 @@ import { EGridOverlayType, IGridDrawingInfo } from "./types";
 export const GridControls = ({
   gridDrawingInfo,
   setGridDrawingInfo,
-  drawGrid,
-  drawTemplates,
 }: {
   gridDrawingInfo: IGridDrawingInfo;
   setGridDrawingInfo: (gridDrawingInfo: IGridDrawingInfo) => void;
-  drawGrid: (gridDrawingInfo: IGridDrawingInfo) => void;
-  drawTemplates: (gridDrawingInfo: IGridDrawingInfo) => void;
 }) => {
   return (
     <>
@@ -20,14 +16,6 @@ export const GridControls = ({
           value={gridDrawingInfo.gridType}
           onChange={(e) => {
             setGridDrawingInfo({
-              ...gridDrawingInfo,
-              gridType: e.target.value as EGridOverlayType,
-            });
-            drawGrid({
-              ...gridDrawingInfo,
-              gridType: e.target.value as EGridOverlayType,
-            });
-            drawTemplates({
               ...gridDrawingInfo,
               gridType: e.target.value as EGridOverlayType,
             });
@@ -67,14 +55,6 @@ export const GridControls = ({
               ...gridDrawingInfo,
               totalUnitsAcross: parseInt(e.target.value),
             });
-            drawGrid({
-              ...gridDrawingInfo,
-              totalUnitsAcross: parseInt(e.target.value),
-            });
-            drawTemplates({
-              ...gridDrawingInfo,
-              totalUnitsAcross: parseInt(e.target.value),
-            });
           }}
           type="number"
         />
@@ -86,14 +66,6 @@ export const GridControls = ({
           value={gridDrawingInfo.lineThickness}
           onChange={(e) => {
             setGridDrawingInfo({
-              ...gridDrawingInfo,
-              lineThickness: parseInt(e.target.value),
-            });
-            drawGrid({
-              ...gridDrawingInfo,
-              lineThickness: parseInt(e.target.value),
-            });
-            drawTemplates({
               ...gridDrawingInfo,
               lineThickness: parseInt(e.target.value),
             });
@@ -114,14 +86,6 @@ export const GridControls = ({
               ...gridDrawingInfo,
               opacity: parseFloat(e.target.value),
             });
-            drawGrid({
-              ...gridDrawingInfo,
-              opacity: parseFloat(e.target.value),
-            });
-            drawTemplates({
-              ...gridDrawingInfo,
-              opacity: parseFloat(e.target.value),
-            });
           }}
           type="range"
           step="0.05"
@@ -137,14 +101,6 @@ export const GridControls = ({
           value={gridDrawingInfo.colour}
           onChange={(e) => {
             setGridDrawingInfo({
-              ...gridDrawingInfo,
-              colour: e.target.value,
-            });
-            drawGrid({
-              ...gridDrawingInfo,
-              colour: e.target.value,
-            });
-            drawTemplates({
               ...gridDrawingInfo,
               colour: e.target.value,
             });
