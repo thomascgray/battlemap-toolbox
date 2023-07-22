@@ -2,6 +2,8 @@
 
 Webapp for tools to edit/setup/work with battlemaps for RPGs and stuff.
 
+Go play with it here! -> https://tombolas-battlemap-toolbox.netlify.app/
+
 ![ezgif-1-ce24a1e4be](https://github.com/thomascgray/battlemap-toolbox/assets/5067968/9e8c5920-a0dd-4944-9279-3df5f60da3af)
 
 ## Features
