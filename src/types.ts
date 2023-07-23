@@ -11,4 +11,6 @@ export interface IGridDrawingInfo {
   xOffset: number;
   yOffset: number;
   colour: string;
+  templateOpacity: number;
+  templateColour: string;
 }

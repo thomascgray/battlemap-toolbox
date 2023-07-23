@@ -1,9 +1,4 @@
 import { useState } from "react";
-import {
-  calculateFinalSquareSize,
-  drawGrid_FlatTop,
-  drawGrid_PointyTop,
-} from "./utils";
 import classnames from "classnames";
 import * as Icons from "./icons";
 import { EGridOverlayType, IGridDrawingInfo } from "./types";
@@ -17,12 +12,14 @@ function App() {
   const [isExportingImage, setisExportingImage] = useState(false);
   const [gridDrawingInfo, setGridDrawingInfo] = useState<IGridDrawingInfo>({
     totalUnitsAcross: 10,
-    opacity: 0.5,
+    opacity: 0.25,
     gridType: EGridOverlayType.SQUARES,
     lineThickness: 2,
     xOffset: 0,
     yOffset: 0,
     colour: "#ffffff",
+    templateOpacity: 0.25,
+    templateColour: "#e74c3c",
   });
 
   const importImageAndSetupCanvases = (image: File | Blob) => {
@@ -199,68 +196,118 @@ function App() {
             </div>
           </div>
           <div className="w-[30%]">
-            <GridControls
-              gridDrawingInfo={gridDrawingInfo}
-              setGridDrawingInfo={setGridDrawingInfo}
-            />
+            {isImageImported && (
+              <GridControls
+                gridDrawingInfo={gridDrawingInfo}
+                setGridDrawingInfo={setGridDrawingInfo}
+              />
+            )}
           </div>
         </div>
 
-        <div className="export-button">
-          <span className="text-sm text-slate-500 italic">
-            Remember: the image is exported at the ORIGINAL resolution that it
-            was imported, not the preview size above.
-          </span>
-          <button
-            onClick={onCopyImageToClipboard}
-            disabled={!isImageImported || isExportingImage}
-            className={classnames(
-              "bg-red-600 rounded px-2 py-2 text-white text-2xl flex items-center",
-              {
-                "opacity-50 cursor-not-allowed": !isImageImported,
-              }
-            )}
-          >
-            <span
-              className={classnames("mr-2", {
-                "animate-spin": isExportingImage,
-              })}
-            >
-              {isExportingImage ? <Icons.Update /> : <Icons.CopyToClipboard />}
+        {isImageImported && (
+          <div className="export-button">
+            <span className="text-sm text-slate-500 italic">
+              Remember: the image is exported at the ORIGINAL resolution that it
+              was imported, not the preview size above.
             </span>
-            {isExportingImage
-              ? "Exporting..."
-              : "Export final image to clipboard"}
-          </button>
-        </div>
-
-        <section className="space-y-2">
-          <h2>Templates</h2>
-          <p className="text-sm text-slate-500 italic">
-            Useful semi-opaque templates for marking out areas of effect, etc.
-            When you copy to clipboard, they'll be the right scaled size - the
-            previews are not to scale.
-          </p>
-          <div className="flex space-x-4">
-            {gridDrawingInfo.gridType === EGridOverlayType.SQUARES && (
-              <>
-                <Templates.Square1x1 gridDrawingInfo={gridDrawingInfo} />
-                <Templates.Square1x3 gridDrawingInfo={gridDrawingInfo} />
-                <Templates.Square2x2 gridDrawingInfo={gridDrawingInfo} />
-                <Templates.Square3x3 gridDrawingInfo={gridDrawingInfo} />
-              </>
-            )}
-            {gridDrawingInfo.gridType ===
-              EGridOverlayType.HEXAGONS_POINTY_TOP && (
-              <>
-                <Templates.HexPointyTop1x1 gridDrawingInfo={gridDrawingInfo} />
-                <Templates.HexPointyTop1Slash2
-                  gridDrawingInfo={gridDrawingInfo}
-                />
-              </>
-            )}
+            <button
+              onClick={onCopyImageToClipboard}
+              disabled={!isImageImported || isExportingImage}
+              className={classnames(
+                "bg-red-600 rounded px-2 py-2 text-white text-2xl flex items-center",
+                {
+                  "opacity-50 cursor-not-allowed": !isImageImported,
+                }
+              )}
+            >
+              <span
+                className={classnames("mr-2", {
+                  "animate-spin": isExportingImage,
+                })}
+              >
+                {isExportingImage ? (
+                  <Icons.Update />
+                ) : (
+                  <Icons.CopyToClipboard />
+                )}
+              </span>
+              {isExportingImage
+                ? "Exporting..."
+                : "Export final image to clipboard"}
+            </button>
           </div>
-        </section>
+        )}
+
+        {isImageImported && (
+          <section className="space-y-2">
+            <h2>Templates</h2>
+            <p className="text-sm text-slate-500 italic">
+              Useful transparent PNG templates for marking out areas of effect,
+              etc. When you copy to clipboard, they'll be the right scaled size
+              - the previews are not to scale.
+            </p>
+            <div className="template-controls flex space-x-4">
+              <label className="flex flex-col space-y-2 w-1/2">
+                <span>Templates opacity: {gridDrawingInfo.opacity}</span>
+                <input
+                  value={gridDrawingInfo.templateOpacity}
+                  onChange={(e) => {
+                    setGridDrawingInfo({
+                      ...gridDrawingInfo,
+                      templateOpacity: parseFloat(e.target.value),
+                    });
+                  }}
+                  type="range"
+                  step="0.05"
+                  min="0.05"
+                  max="1"
+                ></input>
+              </label>
+
+              <label className="flex flex-col space-y-2 w-1/2">
+                <span>Templates colour: {gridDrawingInfo.colour}</span>
+                <input
+                  type="color"
+                  value={gridDrawingInfo.templateColour}
+                  onChange={(e) => {
+                    setGridDrawingInfo({
+                      ...gridDrawingInfo,
+                      templateColour: e.target.value,
+                    });
+                  }}
+                />
+              </label>
+            </div>
+            <div className="flex space-x-4">
+              {gridDrawingInfo.gridType === EGridOverlayType.SQUARES && (
+                <>
+                  <Templates.Square1x1 gridDrawingInfo={gridDrawingInfo} />
+                  <Templates.Square1x3 gridDrawingInfo={gridDrawingInfo} />
+                  <Templates.Square2x2 gridDrawingInfo={gridDrawingInfo} />
+                  <Templates.Square3x3 gridDrawingInfo={gridDrawingInfo} />
+                </>
+              )}
+              {gridDrawingInfo.gridType ===
+                EGridOverlayType.HEXAGONS_POINTY_TOP && (
+                <>
+                  <Templates.HexPointyTop1x1
+                    gridDrawingInfo={gridDrawingInfo}
+                  />
+                  <Templates.HexPointyTop1Slash2
+                    gridDrawingInfo={gridDrawingInfo}
+                  />
+                  <Templates.HexPointyTop1x3
+                    gridDrawingInfo={gridDrawingInfo}
+                  />
+                  <Templates.HexPointyTop3x1
+                    gridDrawingInfo={gridDrawingInfo}
+                  />
+                </>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </>
   );

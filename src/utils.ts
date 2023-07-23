@@ -58,6 +58,7 @@ export const drawGrid_FlatTop = (
       const yPos = y * hexagonDiameter + yTilingOffset;
 
       drawHexagonFlatTop(context, xPos, yPos, hexagonDiameter, hexagonDiameter);
+      context.stroke();
     }
   }
 };
@@ -96,6 +97,7 @@ export const drawGrid_PointyTop = (
         hexagonDiameter,
         hexagonDiameter
       );
+      context.stroke();
     }
   }
 };
@@ -120,7 +122,6 @@ export const drawHexagonFlatTop = (
   /*6*/ context.lineTo(xPos + hexagonWidthQuarter, yPos + hexagonHeight);
 
   context.closePath();
-  context.stroke();
 };
 
 export const drawHexagonPointyTop = (
@@ -143,7 +144,7 @@ export const drawHexagonPointyTop = (
   context.lineTo(xPos + hexagonWidthQuarter * 2, yPos + hexagonHeight); // 5
   context.lineTo(xPos, yPos + hexagonWidthQuarter * 3); // 6
   context.closePath();
-  context.stroke();
+  // context.stroke();
 };
 
 export const calculateFinalSquareSize = (
